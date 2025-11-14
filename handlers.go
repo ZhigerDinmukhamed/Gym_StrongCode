@@ -35,8 +35,8 @@ func NewRouter(store *Store) *mux.Router {
 	admin := r.PathPrefix("/api/admin").Subrouter()
 	admin.Use(AuthMiddleware)
 	admin.Use(AdminOnly)
-	admin.HandleFunc("/api/admin/trainers", h.CreateTrainer).Methods("POST")
-	admin.HandleFunc("/api/admin/classes", h.CreateClass).Methods("POST")
+	admin.HandleFunc("/trainers", h.CreateTrainer).Methods("POST")
+	admin.HandleFunc("/classes", h.CreateClass).Methods("POST")
 
 	return r
 }
@@ -364,3 +364,4 @@ func (h *Handler) ListBookings(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w,http.StatusOK,out)
 }
+
