@@ -3,25 +3,29 @@ package main
 import (
 	"log"
 	"net/http"
+
+	_ "github.com/ZhigerDinmukhamed/docs"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func main() {
-	// initialize DB/store
 	store, err := NewStore("gym.db")
 	if err != nil {
 		log.Fatalf("failed to init store: %v", err)
 	}
 	defer store.DB.Close()
 
-	// ensure schema
 	if err := store.InitSchema(); err != nil {
 		log.Fatalf("failed to init schema: %v", err)
 	}
 
-	// create router and handlers
 	r := NewRouter(store)
 
+	// Добавляем Swagger UI
+	r.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
+
 	log.Println("Server started at :8080")
+	log.Println("Swagger UI: http://localhost:8080/swagger/index.html")
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
