@@ -9,40 +9,26 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "API Support",
+            "email": "support@strongcode.kz"
+        },
+        "license": {
+            "name": "MIT"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api//health": {
-            "get": {
-                "description": "Возвращает статус OK",
-                "tags": [
-                    "health"
-                ],
-                "summary": "Проверка здоровья сервера",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/admin/classes": {
+        "/admin/classes": {
             "post": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Только для админа",
+                "description": "Создаёт новое групповое занятие (только для администратора)",
                 "consumes": [
                     "application/json"
                 ],
@@ -60,7 +46,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.classReq"
+                            "$ref": "#/definitions/handler.createClassRequest"
                         }
                     }
                 ],
@@ -82,27 +68,18 @@ const docTemplate = `{
                                 "type": "string"
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
                     }
                 }
             }
         },
-        "/api/admin/trainers": {
+        "/admin/trainers": {
             "post": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Только для админа",
+                "description": "Создаёт нового тренера (только для администратора)",
                 "consumes": [
                     "application/json"
                 ],
@@ -120,7 +97,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.trainerReq"
+                            "$ref": "#/definitions/handler.createTrainerRequest"
                         }
                     }
                 ],
@@ -140,27 +117,18 @@ const docTemplate = `{
                                 "type": "string"
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
                     }
                 }
             }
         },
-        "/api/bookings": {
+        "/bookings": {
             "get": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Список всех бронирований пользователя",
+                "description": "Возвращает список всех бронирований текущего пользователя",
                 "tags": [
                     "bookings"
                 ],
@@ -171,7 +139,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.Booking"
+                                "$ref": "#/definitions/models.Booking"
                             }
                         }
                     },
@@ -192,7 +160,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Требует активную подписку",
+                "description": "Создаёт бронирование на занятие (требует активную подписку)",
                 "consumes": [
                     "application/json"
                 ],
@@ -210,7 +178,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.createBookingReq"
+                            "$ref": "#/definitions/handler.createBookingRequest"
                         }
                     }
                 ],
@@ -239,22 +207,13 @@ const docTemplate = `{
                                 "type": "string"
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
                     }
                 }
             }
         },
-        "/api/classes": {
+        "/classes": {
             "get": {
-                "description": "Возвращает все доступные занятия",
+                "description": "Возвращает все доступные групповые занятия",
                 "tags": [
                     "classes"
                 ],
@@ -265,7 +224,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.Class"
+                                "$ref": "#/definitions/models.Class"
                             }
                         }
                     },
@@ -281,7 +240,27 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/me": {
+        "/health": {
+            "get": {
+                "description": "Возвращает статус OK",
+                "tags": [
+                    "health"
+                ],
+                "summary": "Проверка здоровья сервера",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/me": {
             "get": {
                 "security": [
                     {
@@ -297,7 +276,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/main.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     },
                     "401": {
@@ -308,22 +287,13 @@ const docTemplate = `{
                                 "type": "string"
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
                     }
                 }
             }
         },
-        "/api/memberships": {
+        "/memberships": {
             "get": {
-                "description": "Возвращает все доступные подписки",
+                "description": "Возвращает все доступные типы подписок",
                 "tags": [
                     "memberships"
                 ],
@@ -334,7 +304,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/main.Membership"
+                                "$ref": "#/definitions/models.Membership"
                             }
                         }
                     },
@@ -350,14 +320,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/memberships/buy": {
+        "/memberships/buy": {
             "post": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Создаёт оплату и активирует подписку",
+                "description": "Создаёт платеж и активирует подписку для пользователя",
                 "consumes": [
                     "application/json"
                 ],
@@ -375,7 +345,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.buyReq"
+                            "$ref": "#/definitions/handler.buyMembershipRequest"
                         }
                     }
                 ],
@@ -395,27 +365,18 @@ const docTemplate = `{
                                 "type": "string"
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
                     }
                 }
             }
         },
-        "/api/payments": {
+        "/payments": {
             "post": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Создаёт запись об оплате",
+                "description": "Создаёт запись об оплате произвольной суммы",
                 "consumes": [
                     "application/json"
                 ],
@@ -428,12 +389,12 @@ const docTemplate = `{
                 "summary": "Произвольная оплата",
                 "parameters": [
                     {
-                        "description": "Сумма и метод",
+                        "description": "Сумма и метод оплаты",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.payReq"
+                            "$ref": "#/definitions/handler.createPaymentRequest"
                         }
                     }
                 ],
@@ -453,22 +414,13 @@ const docTemplate = `{
                                 "type": "string"
                             }
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
                     }
                 }
             }
         },
-        "/api/users/login": {
+        "/users/login": {
             "post": {
-                "description": "Возвращает JWT токен",
+                "description": "Возвращает JWT токен для авторизации",
                 "consumes": [
                     "application/json"
                 ],
@@ -486,7 +438,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.loginReq"
+                            "$ref": "#/definitions/handler.loginRequest"
                         }
                     }
                 ],
@@ -512,9 +464,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/users/register": {
+        "/users/register": {
             "post": {
-                "description": "Создаёт нового пользователя",
+                "description": "Создаёт нового пользователя в системе",
                 "consumes": [
                     "application/json"
                 ],
@@ -532,7 +484,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.registerReq"
+                            "$ref": "#/definitions/handler.registerRequest"
                         }
                     }
                 ],
@@ -540,7 +492,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/main.User"
+                            "$ref": "#/definitions/models.User"
                         }
                     },
                     "400": {
@@ -557,7 +509,144 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "main.Booking": {
+        "handler.buyMembershipRequest": {
+            "type": "object",
+            "required": [
+                "membership_id",
+                "method"
+            ],
+            "properties": {
+                "membership_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "method": {
+                    "type": "string",
+                    "example": "card"
+                }
+            }
+        },
+        "handler.createBookingRequest": {
+            "type": "object",
+            "required": [
+                "class_id"
+            ],
+            "properties": {
+                "class_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "handler.createClassRequest": {
+            "type": "object",
+            "required": [
+                "capacity",
+                "duration_min",
+                "start_time",
+                "title"
+            ],
+            "properties": {
+                "capacity": {
+                    "type": "integer",
+                    "example": 15
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Спокойная практика для новичков"
+                },
+                "duration_min": {
+                    "type": "integer",
+                    "example": 60
+                },
+                "start_time": {
+                    "type": "string",
+                    "example": "2025-12-20T10:00:00Z"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Йога для начинающих"
+                },
+                "trainer_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "handler.createPaymentRequest": {
+            "type": "object",
+            "required": [
+                "amount_cents",
+                "method"
+            ],
+            "properties": {
+                "amount_cents": {
+                    "type": "integer",
+                    "example": 10000
+                },
+                "method": {
+                    "type": "string",
+                    "example": "card"
+                }
+            }
+        },
+        "handler.createTrainerRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "bio": {
+                    "type": "string",
+                    "example": "Мастер спорта международного класса по кроссфиту"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Данияр Смагулов"
+                }
+            }
+        },
+        "handler.loginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "asem@example.kz"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password123"
+                }
+            }
+        },
+        "handler.registerRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "asem@example.kz"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Асем Нурова"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "password123"
+                }
+            }
+        },
+        "models.Booking": {
             "type": "object",
             "properties": {
                 "class_id": {
@@ -577,7 +666,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.Class": {
+        "models.Class": {
             "type": "object",
             "properties": {
                 "capacity": {
@@ -606,7 +695,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.Membership": {
+        "models.Membership": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -626,7 +715,7 @@ const docTemplate = `{
                 }
             }
         },
-        "main.User": {
+        "models.User": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -645,125 +734,26 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "main.buyReq": {
-            "type": "object",
-            "properties": {
-                "membership_id": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "method": {
-                    "type": "string",
-                    "example": "card"
-                }
-            }
-        },
-        "main.classReq": {
-            "type": "object",
-            "properties": {
-                "capacity": {
-                    "type": "integer",
-                    "example": 15
-                },
-                "description": {
-                    "type": "string",
-                    "example": "Спокойная практика для новичков"
-                },
-                "duration_min": {
-                    "type": "integer",
-                    "example": 60
-                },
-                "start_time": {
-                    "type": "string",
-                    "example": "2025-11-20T10:00:00Z"
-                },
-                "title": {
-                    "type": "string",
-                    "example": "Йога для начинающих"
-                },
-                "trainer_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "main.createBookingReq": {
-            "type": "object",
-            "properties": {
-                "class_id": {
-                    "type": "integer",
-                    "example": 1
-                }
-            }
-        },
-        "main.loginReq": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "ivan@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "password123"
-                }
-            }
-        },
-        "main.payReq": {
-            "type": "object",
-            "properties": {
-                "amount_cents": {
-                    "type": "integer",
-                    "example": 10000
-                },
-                "method": {
-                    "type": "string",
-                    "example": "card"
-                }
-            }
-        },
-        "main.registerReq": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "ivan@example.com"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Иван Иванов"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "password123"
-                }
-            }
-        },
-        "main.trainerReq": {
-            "type": "object",
-            "properties": {
-                "bio": {
-                    "type": "string",
-                    "example": "Мастер спорта по фитнесу"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Алексей Петров"
-                }
-            }
+        }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "description": "Введите JWT токен в формате: Bearer \u003cваш_токен\u003e",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "2.0",
+	Host:             "localhost:8080",
+	BasePath:         "/api",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Gym StrongCode API",
+	Description:      "API для управления фитнес-клубом: бронирование занятий, подписки, тренеры, админка.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
