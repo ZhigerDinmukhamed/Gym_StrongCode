@@ -1,0 +1,487 @@
+basePath: /api
+definitions:
+  handler.buyMembershipRequest:
+    properties:
+      membership_id:
+        example: 1
+        type: integer
+      method:
+        example: card
+        type: string
+    required:
+    - membership_id
+    - method
+    type: object
+  handler.createBookingRequest:
+    properties:
+      class_id:
+        example: 1
+        type: integer
+    required:
+    - class_id
+    type: object
+  handler.createClassRequest:
+    properties:
+      capacity:
+        example: 15
+        type: integer
+      description:
+        example: Спокойная практика для новичков
+        type: string
+      duration_min:
+        example: 60
+        type: integer
+      start_time:
+        example: "2025-12-20T10:00:00Z"
+        type: string
+      title:
+        example: Йога для начинающих
+        type: string
+      trainer_id:
+        example: 1
+        type: integer
+    required:
+    - capacity
+    - duration_min
+    - start_time
+    - title
+    type: object
+  handler.createPaymentRequest:
+    properties:
+      amount_cents:
+        example: 10000
+        type: integer
+      method:
+        example: card
+        type: string
+    required:
+    - amount_cents
+    - method
+    type: object
+  handler.createTrainerRequest:
+    properties:
+      bio:
+        example: Мастер спорта международного класса по кроссфиту
+        type: string
+      name:
+        example: Данияр Смагулов
+        type: string
+    required:
+    - name
+    type: object
+  handler.loginRequest:
+    properties:
+      email:
+        example: asem@example.kz
+        type: string
+      password:
+        example: password123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  handler.registerRequest:
+    properties:
+      email:
+        example: asem@example.kz
+        type: string
+      name:
+        example: Асем Нурова
+        type: string
+      password:
+        example: password123
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  models.Booking:
+    properties:
+      class_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      status:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.Class:
+    properties:
+      capacity:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      duration_min:
+        type: integer
+      id:
+        type: integer
+      start_time:
+        type: string
+      title:
+        type: string
+      trainer_id:
+        type: integer
+    type: object
+  models.Membership:
+    properties:
+      created_at:
+        type: string
+      duration_days:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      price_cents:
+        type: integer
+    type: object
+  models.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_admin:
+        type: boolean
+      name:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@strongcode.kz
+    name: API Support
+  description: 'API для управления фитнес-клубом: бронирование занятий, подписки,
+    тренеры, админка.'
+  license:
+    name: MIT
+  title: Gym StrongCode API
+  version: "2.0"
+paths:
+  /admin/classes:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт новое групповое занятие (только для администратора)
+      parameters:
+      - description: Данные занятия
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createClassRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Создать занятие
+      tags:
+      - admin
+  /admin/trainers:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт нового тренера (только для администратора)
+      parameters:
+      - description: Данные тренера
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createTrainerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Создать тренера
+      tags:
+      - admin
+  /bookings:
+    get:
+      description: Возвращает список всех бронирований текущего пользователя
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Booking'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Мои бронирования
+      tags:
+      - bookings
+    post:
+      consumes:
+      - application/json
+      description: Создаёт бронирование на занятие (требует активную подписку)
+      parameters:
+      - description: ID занятия
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createBookingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Забронировать занятие
+      tags:
+      - bookings
+  /classes:
+    get:
+      description: Возвращает все доступные групповые занятия
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Class'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Список занятий
+      tags:
+      - classes
+  /health:
+    get:
+      description: Возвращает статус OK
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Проверка здоровья сервера
+      tags:
+      - health
+  /me:
+    get:
+      description: Возвращает данные авторизованного пользователя
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Получить текущего пользователя
+      tags:
+      - user
+  /memberships:
+    get:
+      description: Возвращает все доступные типы подписок
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Membership'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Список подписок
+      tags:
+      - memberships
+  /memberships/buy:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт платеж и активирует подписку для пользователя
+      parameters:
+      - description: ID подписки и метод оплаты
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.buyMembershipRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Купить подписку
+      tags:
+      - memberships
+  /payments:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт запись об оплате произвольной суммы
+      parameters:
+      - description: Сумма и метод оплаты
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Произвольная оплата
+      tags:
+      - payments
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Возвращает JWT токен для авторизации
+      parameters:
+      - description: Логин и пароль
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Авторизация
+      tags:
+      - auth
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт нового пользователя в системе
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Регистрация пользователя
+      tags:
+      - auth
+securityDefinitions:
+  Bearer:
+    description: 'Введите JWT токен в формате: Bearer <ваш_токен>'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
