@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    container_name: gym-strongcode
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data        # ← сюда сохраняется база навсегда
+      - .:/app                  # ← весь код (удобно для разработки)
+    environment:
+      - DATABASE_PATH=/app/data/gym_strongcode.db
+      - SERVER_ADDRESS=:8080
+      - JWT_SECRET=${JWT_SECRET:-my-super-secret-jwt-key-2025}
+      - ENVIRONMENT=development
