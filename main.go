@@ -1,8 +1,8 @@
-// main.go
 package main
 
 import (
 	"Gym_StrongCode/config"
+	"Gym_StrongCode/internal/cache"
 	"Gym_StrongCode/internal/handler"
 	"Gym_StrongCode/internal/middleware"
 	"Gym_StrongCode/internal/repository"
@@ -45,6 +45,9 @@ func main() {
 		log.Fatalf("Failed to initialize schema: %v", err)
 	}
 
+	// 🔥 Создаём кэш
+	appCache := cache.NewCache()
+
 	// Создаем репозитории
 	userRepo := repository.NewUserRepository(db)
 	membershipRepo := repository.NewMembershipRepository(db)
@@ -57,7 +60,10 @@ func main() {
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret)
 	membershipService := service.NewMembershipService(membershipRepo, paymentRepo, db)
 	trainerService := service.NewTrainerService(trainerRepo)
-	classService := service.NewClassService(classRepo, trainerRepo)
+
+	// 🔥 ClassService теперь с кэшем!
+	classService := service.NewClassService(classRepo, trainerRepo, appCache)
+
 	bookingService := service.NewBookingService(bookingRepo, classRepo, membershipRepo)
 	paymentService := service.NewPaymentService(paymentRepo)
 
@@ -89,7 +95,10 @@ func main() {
 		// Публичные эндпоинты
 		api.POST("/users/register", authHandler.Register)
 		api.POST("/users/login", authHandler.Login)
+
+		// 🔥 классы теперь читаются из кэша
 		api.GET("/classes", classHandler.GetClasses)
+
 		api.GET("/memberships", membershipHandler.GetMemberships)
 
 		// Защищенные эндпоинты (требуют авторизации)
