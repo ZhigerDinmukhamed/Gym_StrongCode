@@ -1,4 +1,3 @@
-// main.go
 package main
 
 import (
@@ -14,38 +13,34 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "github.com/mattn/go-sqlite3" // SQLite драйвер
 )
 
-// @title Gym StrongCode API
-// @version 2.0
-// @description API для управления фитнес-клубом: бронирование занятий, подписки, тренеры, админка.
-// @contact.name API Support
-// @contact.email support@strongcode.kz
-// @license.name MIT
-// @host localhost:8080
-// @BasePath /api
-// @securityDefinitions.apikey Bearer
+// Swagger docs...
+// @title           Gym StrongCode API
+// @version         2.0
+// @description     API для управления фитнес-клубом
+// @host            localhost:8080
+// @BasePath        /api
+// @securityDefinitions.apikey  Bearer
 // @in header
 // @name Authorization
-// @description Введите JWT токен в формате: Bearer <ваш_токен>
 
 func main() {
-	// Загружаем конфигурацию
+	// Загружаем конфиг
 	cfg := config.Load()
 
-	// Инициализируем БД
+	// Подключаемся к БД + автоматически применяются миграции (всё внутри NewDatabase!)
 	db, err := repository.NewDatabase(cfg.DatabasePath)
 	if err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 	defer db.Close()
 
-	// Инициализируем схему и сидеры
-	if err := repository.InitSchema(db); err != nil {
-		log.Fatalf("Failed to initialize schema: %v", err)
-	}
+	// ← УДАЛЕНА СТРОКА InitSchema! Больше не нужна!
 
-	// Создаем репозитории
+	// Репозитории
 	userRepo := repository.NewUserRepository(db)
 	membershipRepo := repository.NewMembershipRepository(db)
 	trainerRepo := repository.NewTrainerRepository(db)
@@ -53,7 +48,7 @@ func main() {
 	bookingRepo := repository.NewBookingRepository(db)
 	paymentRepo := repository.NewPaymentRepository(db)
 
-	// Создаем сервисы
+	// Сервисы
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret)
 	membershipService := service.NewMembershipService(membershipRepo, paymentRepo, db)
 	trainerService := service.NewTrainerService(trainerRepo)
@@ -61,7 +56,7 @@ func main() {
 	bookingService := service.NewBookingService(bookingRepo, classRepo, membershipRepo)
 	paymentService := service.NewPaymentService(paymentRepo)
 
-	// Создаем хендлеры
+	// Хендлеры
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userRepo)
 	membershipHandler := handler.NewMembershipHandler(membershipService)
@@ -70,29 +65,25 @@ func main() {
 	bookingHandler := handler.NewBookingHandler(bookingService)
 	paymentHandler := handler.NewPaymentHandler(paymentService)
 
-	// Настраиваем Gin
+	// Gin режим
 	if cfg.Environment == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	r := gin.Default()
-
-	// Swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// API группа
 	api := r.Group("/api")
 	{
-		// Health check
 		api.GET("/health", handler.HealthCheck)
 
-		// Публичные эндпоинты
+		// Публичные
 		api.POST("/users/register", authHandler.Register)
 		api.POST("/users/login", authHandler.Login)
 		api.GET("/classes", classHandler.GetClasses)
 		api.GET("/memberships", membershipHandler.GetMemberships)
 
-		// Защищенные эндпоинты (требуют авторизации)
+		// Авторизованные
 		authorized := api.Group("")
 		authorized.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 		{
@@ -103,7 +94,7 @@ func main() {
 			authorized.POST("/payments", paymentHandler.CreatePayment)
 		}
 
-		// Админские эндпоинты
+		// Админка
 		admin := api.Group("/admin")
 		admin.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 		admin.Use(middleware.AdminOnly())
@@ -113,9 +104,8 @@ func main() {
 		}
 	}
 
-	log.Printf("🚀 Gym StrongCode Server starting on %s", cfg.ServerAddress)
-	log.Printf("📚 Swagger UI: http://localhost%s/swagger/index.html", cfg.ServerAddress)
-	log.Printf("🏥 Health check: http://localhost%s/api/health", cfg.ServerAddress)
+	log.Printf("Gym StrongCode Server starting on %s", cfg.ServerAddress)
+	log.Printf("Swagger UI: http://localhost%s/swagger/index.html", cfg.ServerAddress)
 
 	if err := r.Run(cfg.ServerAddress); err != nil {
 		log.Fatalf("Server error: %v", err)

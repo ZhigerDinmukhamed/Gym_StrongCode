@@ -1,8 +1,7 @@
-// config/config.go
 package config
 
 import (
-	"os"
+	"github.com/spf13/viper"
 )
 
 type Config struct {
@@ -12,21 +11,31 @@ type Config struct {
 	Environment   string
 }
 
-// Load загружает конфигурацию из переменных окружения
 func Load() *Config {
+	viper.SetConfigFile(".env")
+	viper.AutomaticEnv() // читает из окружения (важно для Docker!)
+	_ = viper.ReadInConfig()
+
 	cfg := &Config{
-		DatabasePath:  getEnv("DATABASE_PATH", "gym_strongcode.db"),
-		ServerAddress: getEnv("SERVER_ADDRESS", ":8080"),
-		JWTSecret:     []byte(getEnv("JWT_SECRET", "strongcode-secret-change-in-production")),
-		Environment:   getEnv("ENVIRONMENT", "development"),
+		DatabasePath:  viper.GetString("DATABASE_PATH"),
+		ServerAddress: viper.GetString("SERVER_ADDRESS"),
+		JWTSecret:     []byte(viper.GetString("JWT_SECRET")),
+		Environment:   viper.GetString("ENVIRONMENT"),
+	}
+
+	// Дефолты (на случай запуска без .env)
+	if cfg.DatabasePath == "" {
+		cfg.DatabasePath = "gym_strongcode.db"
+	}
+	if cfg.ServerAddress == "" {
+		cfg.ServerAddress = ":8080"
+	}
+	if len(cfg.JWTSecret) == 0 {
+		cfg.JWTSecret = []byte("strongcode-secret-change-in-production")
+	}
+	if cfg.Environment == "" {
+		cfg.Environment = "development"
 	}
 
 	return cfg
-}
-
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
 }
