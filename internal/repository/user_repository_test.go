@@ -2,11 +2,10 @@
 package repository
 
 import (
-	// "Gym_StrongCode/internal/models" // Removed unused import
 	"database/sql"
 	"testing"
 
-	_ "github.com/mattn/go-sqlite3" // Use SQLite for testing
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func setupDB() *sql.DB {
