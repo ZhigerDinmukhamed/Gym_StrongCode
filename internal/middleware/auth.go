@@ -1,4 +1,3 @@
-// internal/middleware/auth.go
 package middleware
 
 import (
@@ -6,110 +5,66 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
+	"Gym-StrongCode/internal/utils"
 )
 
-const (
-	UserIDKey    = "user_id"
-	UserEmailKey = "user_email"
-	IsAdminKey   = "is_admin"
-)
-
-// AuthMiddleware проверяет JWT токен в заголовке Authorization
-func AuthMiddleware(jwtSecret []byte) gin.HandlerFunc {
+func AuthMiddleware(secret string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "authorization header required"})
 			return
 		}
 
-		parts := strings.Fields(authHeader)
-		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization format"})
-			c.Abort()
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization format"})
 			return
 		}
 
-		tokenString := parts[1]
-		claims := &jwt.MapClaims{}
-
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			return jwtSecret, nil
+		tokenStr := parts[1]
+		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+			return []byte(secret), nil
 		})
 
 		if err != nil || !token.Valid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return
 		}
 
-		// Извлекаем данные из claims
-		userIDFloat, ok := (*claims)["user_id"].(float64)
+		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token payload"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token claims"})
 			return
 		}
 
-		email, ok := (*claims)["email"].(string)
+		userIDFloat, ok := claims["user_id"].(float64)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token payload"})
-			c.Abort()
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid user_id in token"})
 			return
 		}
 
-		isAdmin, ok := (*claims)["is_admin"].(bool)
-		if !ok {
-			isAdmin = false
-		}
-
-		// Сохраняем в контекст
-		c.Set(UserIDKey, int(userIDFloat))
-		c.Set(UserEmailKey, email)
-		c.Set(IsAdminKey, isAdmin)
+		c.Set("user_id", int(userIDFloat))
+		isAdmin, _ := claims["is_admin"].(bool)
+		c.Set("is_admin", isAdmin)
 
 		c.Next()
 	}
 }
 
-// AdminOnly проверяет, что пользователь является администратором
-func AdminOnly() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		isAdmin, exists := c.Get(IsAdminKey)
-		if !exists || !isAdmin.(bool) {
-			c.JSON(http.StatusForbidden, gin.H{"error": "admin access required"})
-			c.Abort()
-			return
-		}
-		c.Next()
-	}
-}
-
-// GetUserID возвращает ID пользователя из контекста
 func GetUserID(c *gin.Context) (int, bool) {
-	userID, exists := c.Get(UserIDKey)
+	id, exists := c.Get("user_id")
 	if !exists {
 		return 0, false
 	}
-	return userID.(int), true
+	return id.(int), true
 }
 
-// GetUserEmail возвращает email пользователя из контекста
-func GetUserEmail(c *gin.Context) (string, bool) {
-	email, exists := c.Get(UserEmailKey)
-	if !exists {
-		return "", false
-	}
-	return email.(string), true
-}
-
-// IsAdmin проверяет, является ли текущий пользователь администратором
 func IsAdmin(c *gin.Context) bool {
-	isAdmin, exists := c.Get(IsAdminKey)
+	admin, exists := c.Get("is_admin")
 	if !exists {
 		return false
 	}
-	return isAdmin.(bool)
+	return admin.(bool)
 }

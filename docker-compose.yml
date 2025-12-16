@@ -3,15 +3,20 @@ version: '3.9'
 services:
   app:
     build: .
-    container_name: gym-strongcode
+    container_name: gym-strongcode-api
     restart: unless-stopped
     ports:
       - "8080:8080"
     volumes:
-      - ./data:/app/data        # ← сюда сохраняется база навсегда
-      - .:/app                  # ← весь код (удобно для разработки)
+      - ./data:/app/data      # постоянное хранение БД
+      - ./logs:/app/logs      # постоянное хранение логов
     environment:
       - DATABASE_PATH=/app/data/gym_strongcode.db
       - SERVER_ADDRESS=:8080
       - JWT_SECRET=${JWT_SECRET:-my-super-secret-jwt-key-2025}
       - ENVIRONMENT=development
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - FROM_EMAIL=${FROM_EMAIL}
