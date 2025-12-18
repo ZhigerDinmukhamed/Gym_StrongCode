@@ -63,7 +63,9 @@ func main() {
 	paymentService := service.NewPaymentService(paymentRepo)
 
 	// Запуск background worker для email
-	go notificationService.StartWorker()
+	if notificationService != nil {
+		go notificationService.StartWorker()
+	}
 
 	// Хендлеры
 	authHandler := handler.NewAuthHandler(authService)

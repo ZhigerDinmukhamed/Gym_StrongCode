@@ -28,7 +28,7 @@ type Notification struct {
 func NewNotificationService(cfg *config.Config) *NotificationService {
 	if cfg.SMTPHost == "" || cfg.FromEmail == "" {
 		utils.GetLogger().Warn("SMTP not configured - notifications will be logged only")
-		return &NotificationService{}
+		return nil
 	}
 
 	ns := &NotificationService{
@@ -43,7 +43,7 @@ func NewNotificationService(cfg *config.Config) *NotificationService {
 func (ns *NotificationService) SendNotification(to, subject, body string) {
 	logger := utils.GetLogger()
 
-	if ns.cfg == nil || ns.cfg.SMTPHost == "" {
+	if ns == nil || ns.cfg == nil || ns.cfg.SMTPHost == "" {
 		logger.Info("Email notification (SMTP not configured)",
 			zap.String("to", to),
 			zap.String("subject", subject),

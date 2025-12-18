@@ -12,6 +12,10 @@
 *.out
 coverage.*
 *.coverprofile
+*_cov
+total_cov
+unit_cov
+integration_cov
 
 # Go workspace
 go.work
