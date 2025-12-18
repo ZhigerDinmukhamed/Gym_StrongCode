@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <h1>StrongCode Gym</h1>
+  <button onclick="logout()">Logout</button>
+</header>
+
+<nav>
+  <button onclick="loadClasses()">Classes</button>
+  <button onclick="loadGyms()">Gyms</button>
+  <button onclick="loadBookings()">Bookings</button>
+</nav>
+
+<main id="content"></main>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>
