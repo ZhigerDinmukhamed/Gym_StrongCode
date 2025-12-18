@@ -1,8 +1,8 @@
 package service
 
 import (
-	"Gym-StrongCode/internal/models"
-	"Gym-StrongCode/internal/repository"
+	"Gym_StrongCode/internal/models"
+	"Gym_StrongCode/internal/repository"
 )
 
 type GymService struct {

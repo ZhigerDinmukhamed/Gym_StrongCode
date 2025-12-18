@@ -8,17 +8,19 @@ import (
 	"syscall"
 	"time"
 
-	"Gym-StrongCode/config"
-	"Gym-StrongCode/internal/handler"
-	"Gym-StrongCode/internal/middleware"
-	"Gym-StrongCode/internal/repository"
-	"Gym-StrongCode/internal/service"
-	"Gym-StrongCode/internal/utils"
+	"Gym_StrongCode/config"
+	_ "Gym_StrongCode/docs"
+	"Gym_StrongCode/internal/handler"
+	"Gym_StrongCode/internal/middleware"
+	"Gym_StrongCode/internal/repository"
+	"Gym_StrongCode/internal/service"
+	"Gym_StrongCode/internal/utils"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/mattn/go-sqlite3"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	_ "github.com/mattn/go-sqlite3"
+	"go.uber.org/zap"
 )
 
 // @title           Gym StrongCode API
@@ -70,7 +72,7 @@ func main() {
 	membershipHandler := handler.NewMembershipHandler(membershipService)
 	trainerHandler := handler.NewTrainerHandler(trainerService)
 	classHandler := handler.NewClassHandler(classService)
-	bookingHandler := handler.NewBookingHandler(bookingService)
+	bookingHandler := handler.NewBookingHandler(bookingService, userRepo)
 	paymentHandler := handler.NewPaymentHandler(paymentService)
 
 	if cfg.Environment == "production" {
@@ -78,6 +80,21 @@ func main() {
 	}
 
 	r := gin.Default()
+
+	// CORS middleware
+	r.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	})
 
 	r.Use(middleware.LoggingMiddleware(logger))
 	r.Use(middleware.RateLimitMiddleware())
@@ -101,7 +118,7 @@ func main() {
 		authorized.Use(middleware.AuthMiddleware(cfg.JWTSecret))
 		{
 			authorized.GET("/me", userHandler.GetCurrent)
-			authorized.PUT("/me", userHandler.Update) // bonus
+			authorized.PUT("/me", userHandler.Update)
 
 			authorized.POST("/bookings", bookingHandler.Create)
 			authorized.GET("/bookings", bookingHandler.ListUser)

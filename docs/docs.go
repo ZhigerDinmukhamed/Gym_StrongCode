@@ -9,18 +9,49 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {
-            "name": "API Support",
-            "email": "support@strongcode.kz"
-        },
-        "license": {
-            "name": "MIT"
-        },
+        "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/bookings": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get all bookings in the system (admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bookings"
+                ],
+                "summary": "List all bookings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Booking"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/admin/classes": {
             "post": {
                 "security": [
@@ -28,7 +59,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Создаёт новое групповое занятие (только для администратора)",
+                "description": "Create a new fitness class (admin only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -36,12 +67,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "classes"
                 ],
-                "summary": "Создать занятие",
+                "summary": "Create class",
                 "parameters": [
                     {
-                        "description": "Данные занятия",
+                        "description": "Class data",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -53,6 +84,102 @@ const docTemplate = `{
                 "responses": {
                     "201": {
                         "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Class"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/classes/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Update fitness class details (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "classes"
+                ],
+                "summary": "Update class",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Class ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated class data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.createClassRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Delete fitness class (admin only)",
+                "tags": [
+                    "classes"
+                ],
+                "summary": "Delete class",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Class ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -72,14 +199,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/admin/trainers": {
+        "/admin/gyms": {
             "post": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Создаёт нового тренера (только для администратора)",
+                "description": "Create a new gym location (admin only)",
                 "consumes": [
                     "application/json"
                 ],
@@ -87,12 +214,343 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "admin"
+                    "gyms"
                 ],
-                "summary": "Создать тренера",
+                "summary": "Create gym",
                 "parameters": [
                     {
-                        "description": "Данные тренера",
+                        "description": "Gym data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.createGymRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Gym"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/gyms/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Update gym details (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gyms"
+                ],
+                "summary": "Update gym",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Gym ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated gym data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.updateGymRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Delete gym location (admin only)",
+                "tags": [
+                    "gyms"
+                ],
+                "summary": "Delete gym",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Gym ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/memberships": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Create a new membership plan (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "memberships"
+                ],
+                "summary": "Create membership plan",
+                "parameters": [
+                    {
+                        "description": "Membership data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.createMembershipRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Membership"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/memberships/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Update membership plan details (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "memberships"
+                ],
+                "summary": "Update membership plan",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Membership ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated membership data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.createMembershipRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Delete membership plan (admin only)",
+                "tags": [
+                    "memberships"
+                ],
+                "summary": "Delete membership plan",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Membership ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/payments": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get all payments in the system (admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payments"
+                ],
+                "summary": "List all payments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Payment"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/trainers": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Create a new trainer profile (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trainers"
+                ],
+                "summary": "Create trainer",
+                "parameters": [
+                    {
+                        "description": "Trainer data",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -105,8 +563,186 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
+                            "$ref": "#/definitions/models.Trainer"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/trainers/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Update trainer profile (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trainers"
+                ],
+                "summary": "Update trainer",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Trainer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated trainer data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.updateTrainerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Delete trainer profile (admin only)",
+                "tags": [
+                    "trainers"
+                ],
+                "summary": "Delete trainer",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Trainer ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get all users (admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "List all users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.User"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/users/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Delete user by ID (admin only)",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Delete user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
@@ -128,11 +764,14 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Возвращает список всех бронирований текущего пользователя",
+                "description": "Get all bookings for the current user",
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "bookings"
                 ],
-                "summary": "Мои бронирования",
+                "summary": "List user bookings",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -160,7 +799,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Создаёт бронирование на занятие (требует активную подписку)",
+                "description": "Create a booking for a fitness class",
                 "consumes": [
                     "application/json"
                 ],
@@ -170,10 +809,10 @@ const docTemplate = `{
                 "tags": [
                     "bookings"
                 ],
-                "summary": "Забронировать занятие",
+                "summary": "Book a class",
                 "parameters": [
                     {
-                        "description": "ID занятия",
+                        "description": "Booking data",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -187,7 +826,9 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
@@ -199,8 +840,51 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "403": {
-                        "description": "Forbidden",
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Cancel a user's class booking",
+                "tags": [
+                    "bookings"
+                ],
+                "summary": "Cancel booking",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Booking ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -213,11 +897,14 @@ const docTemplate = `{
         },
         "/classes": {
             "get": {
-                "description": "Возвращает все доступные групповые занятия",
+                "description": "Get all fitness classes",
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "classes"
                 ],
-                "summary": "Список занятий",
+                "summary": "List all classes",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -240,13 +927,48 @@ const docTemplate = `{
                 }
             }
         },
+        "/gyms": {
+            "get": {
+                "description": "Get all gym locations",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "gyms"
+                ],
+                "summary": "List all gyms",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Gym"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
-                "description": "Возвращает статус OK",
+                "description": "Returns service health status",
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "health"
                 ],
-                "summary": "Проверка здоровья сервера",
+                "summary": "Health check",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -267,11 +989,14 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Возвращает данные авторизованного пользователя",
-                "tags": [
-                    "user"
+                "description": "Returns the currently authenticated user profile",
+                "produces": [
+                    "application/json"
                 ],
-                "summary": "Получить текущего пользователя",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get current user",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -279,8 +1004,63 @@ const docTemplate = `{
                             "$ref": "#/definitions/models.User"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Update name and email of current user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update user profile",
+                "parameters": [
+                    {
+                        "description": "Update data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.updateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -293,11 +1073,14 @@ const docTemplate = `{
         },
         "/memberships": {
             "get": {
-                "description": "Возвращает все доступные типы подписок",
+                "description": "Get all available membership plans",
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "memberships"
                 ],
-                "summary": "Список подписок",
+                "summary": "List all memberships",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -327,7 +1110,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Создаёт платеж и активирует подписку для пользователя",
+                "description": "Purchase a membership plan",
                 "consumes": [
                     "application/json"
                 ],
@@ -337,10 +1120,10 @@ const docTemplate = `{
                 "tags": [
                     "memberships"
                 ],
-                "summary": "Купить подписку",
+                "summary": "Buy membership",
                 "parameters": [
                     {
-                        "description": "ID подписки и метод оплаты",
+                        "description": "Purchase data",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -376,7 +1159,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Создаёт запись об оплате произвольной суммы",
+                "description": "Create a standalone payment",
                 "consumes": [
                     "application/json"
                 ],
@@ -386,10 +1169,10 @@ const docTemplate = `{
                 "tags": [
                     "payments"
                 ],
-                "summary": "Произвольная оплата",
+                "summary": "Create payment",
                 "parameters": [
                     {
-                        "description": "Сумма и метод оплаты",
+                        "description": "Payment data",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -399,11 +1182,10 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Payment"
                         }
                     },
                     "400": {
@@ -418,9 +1200,41 @@ const docTemplate = `{
                 }
             }
         },
+        "/trainers": {
+            "get": {
+                "description": "Get all fitness trainers",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "trainers"
+                ],
+                "summary": "List all trainers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Trainer"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/users/login": {
             "post": {
-                "description": "Возвращает JWT токен для авторизации",
+                "description": "Authenticate user and get JWT token",
                 "consumes": [
                     "application/json"
                 ],
@@ -430,10 +1244,10 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Авторизация",
+                "summary": "Login user",
                 "parameters": [
                     {
-                        "description": "Логин и пароль",
+                        "description": "Login credentials",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -466,7 +1280,7 @@ const docTemplate = `{
         },
         "/users/register": {
             "post": {
-                "description": "Создаёт нового пользователя в системе",
+                "description": "Create a new user account",
                 "consumes": [
                     "application/json"
                 ],
@@ -476,10 +1290,10 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Регистрация пользователя",
+                "summary": "Register new user",
                 "parameters": [
                     {
-                        "description": "Данные пользователя",
+                        "description": "Registration data",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -517,12 +1331,10 @@ const docTemplate = `{
             ],
             "properties": {
                 "membership_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "integer"
                 },
                 "method": {
-                    "type": "string",
-                    "example": "card"
+                    "type": "string"
                 }
             }
         },
@@ -533,8 +1345,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "class_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "integer"
                 }
             }
         },
@@ -543,33 +1354,64 @@ const docTemplate = `{
             "required": [
                 "capacity",
                 "duration_min",
+                "gym_id",
                 "start_time",
                 "title"
             ],
             "properties": {
                 "capacity": {
-                    "type": "integer",
-                    "example": 15
+                    "type": "integer"
                 },
                 "description": {
-                    "type": "string",
-                    "example": "Спокойная практика для новичков"
+                    "type": "string"
                 },
                 "duration_min": {
-                    "type": "integer",
-                    "example": 60
+                    "type": "integer"
+                },
+                "gym_id": {
+                    "type": "integer"
                 },
                 "start_time": {
-                    "type": "string",
-                    "example": "2025-12-20T10:00:00Z"
+                    "type": "string"
                 },
                 "title": {
-                    "type": "string",
-                    "example": "Йога для начинающих"
+                    "type": "string"
                 },
                 "trainer_id": {
-                    "type": "integer",
-                    "example": 1
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.createGymRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.createMembershipRequest": {
+            "type": "object",
+            "required": [
+                "duration_days",
+                "name",
+                "price_cents"
+            ],
+            "properties": {
+                "duration_days": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price_cents": {
+                    "type": "integer"
                 }
             }
         },
@@ -581,12 +1423,10 @@ const docTemplate = `{
             ],
             "properties": {
                 "amount_cents": {
-                    "type": "integer",
-                    "example": 10000
+                    "type": "integer"
                 },
                 "method": {
-                    "type": "string",
-                    "example": "card"
+                    "type": "string"
                 }
             }
         },
@@ -597,12 +1437,10 @@ const docTemplate = `{
             ],
             "properties": {
                 "bio": {
-                    "type": "string",
-                    "example": "Мастер спорта международного класса по кроссфиту"
+                    "type": "string"
                 },
                 "name": {
-                    "type": "string",
-                    "example": "Данияр Смагулов"
+                    "type": "string"
                 }
             }
         },
@@ -614,12 +1452,10 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string",
-                    "example": "asem@example.kz"
+                    "type": "string"
                 },
                 "password": {
-                    "type": "string",
-                    "example": "password123"
+                    "type": "string"
                 }
             }
         },
@@ -632,17 +1468,57 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
-                    "type": "string",
-                    "example": "asem@example.kz"
+                    "type": "string"
                 },
                 "name": {
-                    "type": "string",
-                    "example": "Асем Нурова"
+                    "type": "string"
                 },
                 "password": {
                     "type": "string",
-                    "minLength": 6,
-                    "example": "password123"
+                    "minLength": 6
+                }
+            }
+        },
+        "handler.updateGymRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.updateTrainerRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "bio": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.updateUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -681,6 +1557,10 @@ const docTemplate = `{
                 "duration_min": {
                     "type": "integer"
                 },
+                "gym_id": {
+                    "description": "новый FK",
+                    "type": "integer"
+                },
                 "id": {
                     "type": "integer"
                 },
@@ -692,6 +1572,23 @@ const docTemplate = `{
                 },
                 "trainer_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.Gym": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -712,6 +1609,55 @@ const docTemplate = `{
                 },
                 "price_cents": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.Payment": {
+            "type": "object",
+            "properties": {
+                "amount_cents": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "method": {
+                    "type": "string"
+                },
+                "reference_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Trainer": {
+            "type": "object",
+            "properties": {
+                "bio": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -738,7 +1684,7 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "Bearer": {
-            "description": "Введите JWT токен в формате: Bearer \u003cваш_токен\u003e",
+            "description": "Введите JWT в формате: Bearer \u003ctoken\u003e",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"
@@ -753,11 +1699,9 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Gym StrongCode API",
-	Description:      "API для управления фитнес-клубом: бронирование занятий, подписки, тренеры, админка.",
+	Description:      "API для управления фитнес-клубом: пользователи, подписки, залы, тренеры, занятия, бронирования, платежи",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
 }
 
 func init() {

@@ -1,8 +1,8 @@
 package repository
 
 import (
+	"Gym_StrongCode/internal/models"
 	"database/sql"
-	"Gym-StrongCode/internal/models"
 )
 
 type UserRepository struct {
@@ -27,10 +27,8 @@ func (r *UserRepository) Create(name, email, passwordHash string, isAdmin bool) 
 
 func (r *UserRepository) GetByEmail(email string) (*models.User, error) {
 	user := &models.User{}
-	err := r.db.QueryRow(`
-		SELECT id, name, email, is_admin, created_at 
-		FROM users WHERE email = ?`, email).
-		Scan(&user.ID, &user.Name, &user.Email, &user.IsAdmin, &user.CreatedAt)
+	err := r.db.QueryRow(`SELECT id, name, email, password_hash, is_admin, created_at FROM users WHERE email = ?`, email).
+		Scan(&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.IsAdmin, &user.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -65,6 +63,14 @@ func (r *UserRepository) List() ([]models.User, error) {
 		users = append(users, u)
 	}
 	return users, nil
+}
+
+func (r *UserRepository) Update(id int, name, email string) error {
+	_, err := r.db.Exec(`
+		UPDATE users 
+		SET name = ?, email = ? 
+		WHERE id = ?`, name, email, id)
+	return err
 }
 
 func (r *UserRepository) Delete(id int) error {

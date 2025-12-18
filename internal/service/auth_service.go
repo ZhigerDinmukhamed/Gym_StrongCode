@@ -3,10 +3,11 @@ package service
 import (
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
+	"Gym_StrongCode/internal/models"
+	"Gym_StrongCode/internal/repository"
+
 	"github.com/golang-jwt/jwt/v5"
-	"Gym-StrongCode/internal/models"
-	"Gym-StrongCode/internal/repository"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {

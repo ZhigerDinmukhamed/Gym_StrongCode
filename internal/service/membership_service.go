@@ -2,9 +2,10 @@ package service
 
 import (
 	"database/sql"
+	"fmt"
 
-	"Gym-StrongCode/internal/models"
-	"Gym-StrongCode/internal/repository"
+	"Gym_StrongCode/internal/models"
+	"Gym_StrongCode/internal/repository"
 )
 
 type MembershipService struct {
@@ -38,8 +39,7 @@ func (s *MembershipService) Buy(userID, membershipID int, method string) (map[st
 		return nil, err
 	}
 
-	// Создаём платёж
-	payment, err := s.paymentRepo.CreateStandalone(userID, membership.PriceCents, "KZT", method, "done")
+	payment, err := s.paymentRepo.CreateForMembership(userID, membership.PriceCents, "KZT", method, "membership purchase", fmt.Sprintf("membership_%d", membershipID))
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -57,9 +57,9 @@ func (s *MembershipService) Buy(userID, membershipID int, method string) (map[st
 	s.notificationSvc.SendNotification("", "Подписка активирована", "Ваша подписка успешно куплена!")
 
 	return map[string]interface{}{
-		"payment":     payment,
-		"membership":  membership,
-		"message":     "membership activated",
+		"payment":    payment,
+		"membership": membership,
+		"message":    "membership activated",
 	}, nil
 }
 

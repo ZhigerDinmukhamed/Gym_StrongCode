@@ -2,10 +2,9 @@ package service
 
 import (
 	"fmt"
-	"time"
 
-	"Gym-StrongCode/internal/models"
-	"Gym-StrongCode/internal/repository"
+	"Gym_StrongCode/internal/models"
+	"Gym_StrongCode/internal/repository"
 )
 
 type BookingService struct {
@@ -39,7 +38,11 @@ func (s *BookingService) Create(userID, classID int, userEmail string) error {
 	}
 
 	// Уведомление по email
-	class, _ := s.classRepo.GetByID(classID)
+	class, err := s.classRepo.GetByID(classID)
+	if err != nil {
+		return err
+	}
+
 	body := fmt.Sprintf(`
 		<h2>Бронирование подтверждено!</h2>
 		<p>Вы успешно забронировали занятие: <strong>%s</strong></p>
@@ -50,4 +53,16 @@ func (s *BookingService) Create(userID, classID int, userEmail string) error {
 	s.notificationSvc.SendNotification(userEmail, "Бронирование занятия", body)
 
 	return nil
+}
+
+func (s *BookingService) ListUser(userID int) ([]models.Booking, error) {
+	return s.bookingRepo.GetByUser(userID)
+}
+
+func (s *BookingService) ListAll() ([]models.Booking, error) {
+	return s.bookingRepo.ListAll()
+}
+
+func (s *BookingService) Cancel(bookingID, userID int) error {
+	return s.bookingRepo.Cancel(bookingID, userID)
 }

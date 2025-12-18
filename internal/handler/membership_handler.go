@@ -4,9 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"Gym_StrongCode/internal/middleware"
+	"Gym_StrongCode/internal/service"
+
 	"github.com/gin-gonic/gin"
-	"Gym-StrongCode/internal/middleware"
-	"Gym-StrongCode/internal/service"
 )
 
 type MembershipHandler struct {
@@ -17,6 +18,14 @@ func NewMembershipHandler(membershipService *service.MembershipService) *Members
 	return &MembershipHandler{membershipService: membershipService}
 }
 
+// ListMemberships godoc
+// @Summary      List all memberships
+// @Description  Get all available membership plans
+// @Tags         memberships
+// @Produce      json
+// @Success      200  {array}   models.Membership
+// @Failure      500  {object}  map[string]string
+// @Router       /memberships [get]
 func (h *MembershipHandler) List(c *gin.Context) {
 	memberships, err := h.membershipService.List()
 	if err != nil {
@@ -31,6 +40,17 @@ type buyMembershipRequest struct {
 	Method       string `json:"method" binding:"required"`
 }
 
+// BuyMembership godoc
+// @Summary      Buy membership
+// @Description  Purchase a membership plan
+// @Tags         memberships
+// @Security     Bearer
+// @Accept       json
+// @Produce      json
+// @Param        body  body      handler.buyMembershipRequest  true  "Purchase data"
+// @Success      200   {object}  map[string]interface{}
+// @Failure      400   {object}  map[string]string
+// @Router       /memberships/buy [post]
 func (h *MembershipHandler) Buy(c *gin.Context) {
 	userID, _ := middleware.GetUserID(c)
 
@@ -56,6 +76,17 @@ type createMembershipRequest struct {
 	PriceCents   int    `json:"price_cents" binding:"required"`
 }
 
+// CreateMembership godoc
+// @Summary      Create membership plan
+// @Description  Create a new membership plan (admin only)
+// @Tags         memberships
+// @Security     Bearer
+// @Accept       json
+// @Produce      json
+// @Param        body  body      handler.createMembershipRequest  true  "Membership data"
+// @Success      201   {object}  models.Membership
+// @Failure      400   {object}  map[string]string
+// @Router       /admin/memberships [post]
 func (h *MembershipHandler) Create(c *gin.Context) {
 	var req createMembershipRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -72,6 +103,18 @@ func (h *MembershipHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, m)
 }
 
+// UpdateMembership godoc
+// @Summary      Update membership plan
+// @Description  Update membership plan details (admin only)
+// @Tags         memberships
+// @Security     Bearer
+// @Accept       json
+// @Produce      json
+// @Param        id    path      int                             true  "Membership ID"
+// @Param        body  body      handler.createMembershipRequest true  "Updated membership data"
+// @Success      200   {object}  map[string]string
+// @Failure      400   {object}  map[string]string
+// @Router       /admin/memberships/{id} [put]
 func (h *MembershipHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
@@ -90,6 +133,15 @@ func (h *MembershipHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "membership updated"})
 }
 
+// DeleteMembership godoc
+// @Summary      Delete membership plan
+// @Description  Delete membership plan (admin only)
+// @Tags         memberships
+// @Security     Bearer
+// @Param        id   path      int  true  "Membership ID"
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  map[string]string
+// @Router       /admin/memberships/{id} [delete]
 func (h *MembershipHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)

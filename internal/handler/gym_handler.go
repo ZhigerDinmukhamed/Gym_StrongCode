@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"Gym_StrongCode/internal/service"
+
 	"github.com/gin-gonic/gin"
-	"Gym-StrongCode/internal/middleware"
-	"Gym-StrongCode/internal/service"
 )
 
 type GymHandler struct {
@@ -17,6 +17,14 @@ func NewGymHandler(gymService *service.GymService) *GymHandler {
 	return &GymHandler{gymService: gymService}
 }
 
+// ListGyms godoc
+// @Summary      List all gyms
+// @Description  Get all gym locations
+// @Tags         gyms
+// @Produce      json
+// @Success      200  {array}   models.Gym
+// @Failure      500  {object}  map[string]string
+// @Router       /gyms [get]
 func (h *GymHandler) List(c *gin.Context) {
 	gyms, err := h.gymService.List()
 	if err != nil {
@@ -31,6 +39,17 @@ type createGymRequest struct {
 	Address string `json:"address"`
 }
 
+// CreateGym godoc
+// @Summary      Create gym
+// @Description  Create a new gym location (admin only)
+// @Tags         gyms
+// @Security     Bearer
+// @Accept       json
+// @Produce      json
+// @Param        body  body      handler.createGymRequest  true  "Gym data"
+// @Success      201   {object}  models.Gym
+// @Failure      400   {object}  map[string]string
+// @Router       /admin/gyms [post]
 func (h *GymHandler) Create(c *gin.Context) {
 	var req createGymRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -52,6 +71,18 @@ type updateGymRequest struct {
 	Address string `json:"address"`
 }
 
+// UpdateGym godoc
+// @Summary      Update gym
+// @Description  Update gym details (admin only)
+// @Tags         gyms
+// @Security     Bearer
+// @Accept       json
+// @Produce      json
+// @Param        id    path      int                      true  "Gym ID"
+// @Param        body  body      handler.updateGymRequest true  "Updated gym data"
+// @Success      200   {object}  map[string]string
+// @Failure      400   {object}  map[string]string
+// @Router       /admin/gyms/{id} [put]
 func (h *GymHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)
@@ -70,6 +101,15 @@ func (h *GymHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "gym updated"})
 }
 
+// DeleteGym godoc
+// @Summary      Delete gym
+// @Description  Delete gym location (admin only)
+// @Tags         gyms
+// @Security     Bearer
+// @Param        id   path      int  true  "Gym ID"
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  map[string]string
+// @Router       /admin/gyms/{id} [delete]
 func (h *GymHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, _ := strconv.Atoi(idStr)

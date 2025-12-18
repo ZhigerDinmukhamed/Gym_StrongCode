@@ -4,11 +4,13 @@ import (
 	"database/sql"
 	"log"
 
+	"Gym_StrongCode/internal/utils"
+
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/mattn/go-sqlite3"
-	"Gym-StrongCode/internal/utils"
+	"go.uber.org/zap"
 )
 
 func NewDatabase(path string) (*sql.DB, error) {

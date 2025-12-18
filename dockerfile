@@ -1,20 +1,22 @@
 FROM golang:1.23-alpine AS builder
 
+RUN apk add --no-cache gcc musl-dev sqlite-dev
+
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+ENV CGO_ENABLED=1
 RUN go build -o main cmd/main.go
 
 FROM alpine:latest
-RUN apk --no-cache add ca-certificates tzdata
+RUN apk --no-cache add ca-certificates tzdata sqlite
 WORKDIR /app
-
 COPY --from=builder /app/main .
 COPY --from=builder /app/migrations ./migrations
+COPY .env .
 
-# Папки для данных и логов
 RUN mkdir -p /app/data /app/logs
 
 EXPOSE 8080

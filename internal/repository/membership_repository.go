@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"Gym-StrongCode/internal/models"
+	"Gym_StrongCode/internal/models"
 )
 
 type MembershipRepository struct {

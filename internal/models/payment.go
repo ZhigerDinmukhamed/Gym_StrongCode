@@ -7,5 +7,7 @@ type Payment struct {
 	Currency    string `json:"currency" db:"currency"`
 	Method      string `json:"method" db:"method"`
 	Status      string `json:"status" db:"status"`
+	Description string `json:"description" db:"description"`
+	ReferenceID string `json:"reference_id" db:"reference_id"`
 	CreatedAt   string `json:"created_at" db:"created_at"`
 }

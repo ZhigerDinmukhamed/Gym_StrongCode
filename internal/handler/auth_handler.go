@@ -3,8 +3,9 @@ package handler
 import (
 	"net/http"
 
+	"Gym_StrongCode/internal/service"
+
 	"github.com/gin-gonic/gin"
-	"Gym-StrongCode/internal/service"
 )
 
 type AuthHandler struct {
@@ -21,6 +22,16 @@ type registerRequest struct {
 	Password string `json:"password" binding:"required,min=6"`
 }
 
+// Register godoc
+// @Summary      Register new user
+// @Description  Create a new user account
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      handler.registerRequest  true  "Registration data"
+// @Success      201   {object}  models.User
+// @Failure      400   {object}  map[string]string
+// @Router       /users/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req registerRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -42,6 +53,16 @@ type loginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+// Login godoc
+// @Summary      Login user
+// @Description  Authenticate user and get JWT token
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        body  body      handler.loginRequest  true  "Login credentials"
+// @Success      200   {object}  map[string]string
+// @Failure      401   {object}  map[string]string
+// @Router       /users/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req loginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -5,9 +5,11 @@ import (
 	"net/smtp"
 	"sync"
 
-	"Gym-StrongCode/config"
-	"Gym-StrongCode/internal/utils"
+	"Gym_StrongCode/config"
+	"Gym_StrongCode/internal/utils"
+
 	"github.com/jordan-wright/email"
+	"go.uber.org/zap"
 )
 
 type NotificationService struct {
@@ -26,7 +28,7 @@ type Notification struct {
 func NewNotificationService(cfg *config.Config) *NotificationService {
 	if cfg.SMTPHost == "" || cfg.FromEmail == "" {
 		utils.GetLogger().Warn("SMTP not configured - notifications will be logged only")
-		return &NotificationService{}
+		return &NotificationService{cfg: cfg} // Добавили cfg для использования в Send
 	}
 
 	ns := &NotificationService{
@@ -39,10 +41,8 @@ func NewNotificationService(cfg *config.Config) *NotificationService {
 }
 
 func (ns *NotificationService) SendNotification(to, subject, body string) {
-	logger := utils.GetLogger()
-
 	if ns.cfg.SMTPHost == "" {
-		logger.Info("Email notification (SMTP not configured)",
+		utils.GetLogger().Info("Notification logged (no SMTP):",
 			zap.String("to", to),
 			zap.String("subject", subject),
 			zap.String("body", body),
@@ -59,7 +59,7 @@ func (ns *NotificationService) SendNotification(to, subject, body string) {
 	select {
 	case ns.emailPool <- e:
 	default:
-		logger.Warn("Email queue full, dropping notification")
+		utils.GetLogger().Warn("Email queue full, dropping notification")
 	}
 }
 

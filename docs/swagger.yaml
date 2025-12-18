@@ -3,10 +3,8 @@ definitions:
   handler.buyMembershipRequest:
     properties:
       membership_id:
-        example: 1
         type: integer
       method:
-        example: card
         type: string
     required:
     - membership_id
@@ -15,7 +13,6 @@ definitions:
   handler.createBookingRequest:
     properties:
       class_id:
-        example: 1
         type: integer
     required:
     - class_id
@@ -23,36 +20,53 @@ definitions:
   handler.createClassRequest:
     properties:
       capacity:
-        example: 15
         type: integer
       description:
-        example: Спокойная практика для новичков
         type: string
       duration_min:
-        example: 60
+        type: integer
+      gym_id:
         type: integer
       start_time:
-        example: "2025-12-20T10:00:00Z"
         type: string
       title:
-        example: Йога для начинающих
         type: string
       trainer_id:
-        example: 1
         type: integer
     required:
     - capacity
     - duration_min
+    - gym_id
     - start_time
     - title
+    type: object
+  handler.createGymRequest:
+    properties:
+      address:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  handler.createMembershipRequest:
+    properties:
+      duration_days:
+        type: integer
+      name:
+        type: string
+      price_cents:
+        type: integer
+    required:
+    - duration_days
+    - name
+    - price_cents
     type: object
   handler.createPaymentRequest:
     properties:
       amount_cents:
-        example: 10000
         type: integer
       method:
-        example: card
         type: string
     required:
     - amount_cents
@@ -61,10 +75,8 @@ definitions:
   handler.createTrainerRequest:
     properties:
       bio:
-        example: Мастер спорта международного класса по кроссфиту
         type: string
       name:
-        example: Данияр Смагулов
         type: string
     required:
     - name
@@ -72,10 +84,8 @@ definitions:
   handler.loginRequest:
     properties:
       email:
-        example: asem@example.kz
         type: string
       password:
-        example: password123
         type: string
     required:
     - email
@@ -84,19 +94,44 @@ definitions:
   handler.registerRequest:
     properties:
       email:
-        example: asem@example.kz
         type: string
       name:
-        example: Асем Нурова
         type: string
       password:
-        example: password123
         minLength: 6
         type: string
     required:
     - email
     - name
     - password
+    type: object
+  handler.updateGymRequest:
+    properties:
+      address:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  handler.updateTrainerRequest:
+    properties:
+      bio:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  handler.updateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    required:
+    - email
+    - name
     type: object
   models.Booking:
     properties:
@@ -121,6 +156,9 @@ definitions:
         type: string
       duration_min:
         type: integer
+      gym_id:
+        description: новый FK
+        type: integer
       id:
         type: integer
       start_time:
@@ -129,6 +167,17 @@ definitions:
         type: string
       trainer_id:
         type: integer
+    type: object
+  models.Gym:
+    properties:
+      address:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
     type: object
   models.Membership:
     properties:
@@ -142,6 +191,38 @@ definitions:
         type: string
       price_cents:
         type: integer
+    type: object
+  models.Payment:
+    properties:
+      amount_cents:
+        type: integer
+      created_at:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      method:
+        type: string
+      reference_id:
+        type: string
+      status:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.Trainer:
+    properties:
+      bio:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
     type: object
   models.User:
     properties:
@@ -158,82 +239,17 @@ definitions:
     type: object
 host: localhost:8080
 info:
-  contact:
-    email: support@strongcode.kz
-    name: API Support
-  description: 'API для управления фитнес-клубом: бронирование занятий, подписки,
-    тренеры, админка.'
-  license:
-    name: MIT
+  contact: {}
+  description: 'API для управления фитнес-клубом: пользователи, подписки, залы, тренеры,
+    занятия, бронирования, платежи'
   title: Gym StrongCode API
   version: "2.0"
 paths:
-  /admin/classes:
-    post:
-      consumes:
-      - application/json
-      description: Создаёт новое групповое занятие (только для администратора)
-      parameters:
-      - description: Данные занятия
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handler.createClassRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Создать занятие
-      tags:
-      - admin
-  /admin/trainers:
-    post:
-      consumes:
-      - application/json
-      description: Создаёт нового тренера (только для администратора)
-      parameters:
-      - description: Данные тренера
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/handler.createTrainerRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - Bearer: []
-      summary: Создать тренера
-      tags:
-      - admin
-  /bookings:
+  /admin/bookings:
     get:
-      description: Возвращает список всех бронирований текущего пользователя
+      description: Get all bookings in the system (admin only)
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -249,15 +265,483 @@ paths:
             type: object
       security:
       - Bearer: []
-      summary: Мои бронирования
+      summary: List all bookings
+      tags:
+      - bookings
+  /admin/classes:
+    post:
+      consumes:
+      - application/json
+      description: Create a new fitness class (admin only)
+      parameters:
+      - description: Class data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createClassRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Class'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create class
+      tags:
+      - classes
+  /admin/classes/{id}:
+    delete:
+      description: Delete fitness class (admin only)
+      parameters:
+      - description: Class ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete class
+      tags:
+      - classes
+    put:
+      consumes:
+      - application/json
+      description: Update fitness class details (admin only)
+      parameters:
+      - description: Class ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated class data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createClassRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update class
+      tags:
+      - classes
+  /admin/gyms:
+    post:
+      consumes:
+      - application/json
+      description: Create a new gym location (admin only)
+      parameters:
+      - description: Gym data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createGymRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Gym'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create gym
+      tags:
+      - gyms
+  /admin/gyms/{id}:
+    delete:
+      description: Delete gym location (admin only)
+      parameters:
+      - description: Gym ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete gym
+      tags:
+      - gyms
+    put:
+      consumes:
+      - application/json
+      description: Update gym details (admin only)
+      parameters:
+      - description: Gym ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated gym data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateGymRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update gym
+      tags:
+      - gyms
+  /admin/memberships:
+    post:
+      consumes:
+      - application/json
+      description: Create a new membership plan (admin only)
+      parameters:
+      - description: Membership data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createMembershipRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Membership'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create membership plan
+      tags:
+      - memberships
+  /admin/memberships/{id}:
+    delete:
+      description: Delete membership plan (admin only)
+      parameters:
+      - description: Membership ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete membership plan
+      tags:
+      - memberships
+    put:
+      consumes:
+      - application/json
+      description: Update membership plan details (admin only)
+      parameters:
+      - description: Membership ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated membership data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createMembershipRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update membership plan
+      tags:
+      - memberships
+  /admin/payments:
+    get:
+      description: Get all payments in the system (admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Payment'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: List all payments
+      tags:
+      - payments
+  /admin/trainers:
+    post:
+      consumes:
+      - application/json
+      description: Create a new trainer profile (admin only)
+      parameters:
+      - description: Trainer data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.createTrainerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Trainer'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Create trainer
+      tags:
+      - trainers
+  /admin/trainers/{id}:
+    delete:
+      description: Delete trainer profile (admin only)
+      parameters:
+      - description: Trainer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete trainer
+      tags:
+      - trainers
+    put:
+      consumes:
+      - application/json
+      description: Update trainer profile (admin only)
+      parameters:
+      - description: Trainer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated trainer data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateTrainerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update trainer
+      tags:
+      - trainers
+  /admin/users:
+    get:
+      description: Get all users (admin only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: List all users
+      tags:
+      - users
+  /admin/users/{id}:
+    delete:
+      description: Delete user by ID (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Delete user
+      tags:
+      - users
+  /bookings:
+    get:
+      description: Get all bookings for the current user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Booking'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: List user bookings
       tags:
       - bookings
     post:
       consumes:
       - application/json
-      description: Создаёт бронирование на занятие (требует активную подписку)
+      description: Create a booking for a fitness class
       parameters:
-      - description: ID занятия
+      - description: Booking data
         in: body
         name: body
         required: true
@@ -269,7 +753,8 @@ paths:
         "201":
           description: Created
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
             type: object
         "400":
           description: Bad Request
@@ -277,20 +762,49 @@ paths:
             additionalProperties:
               type: string
             type: object
-        "403":
-          description: Forbidden
+        "500":
+          description: Internal Server Error
           schema:
             additionalProperties:
               type: string
             type: object
       security:
       - Bearer: []
-      summary: Забронировать занятие
+      summary: Book a class
+      tags:
+      - bookings
+  /bookings/{id}:
+    delete:
+      description: Cancel a user's class booking
+      parameters:
+      - description: Booking ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Cancel booking
       tags:
       - bookings
   /classes:
     get:
-      description: Возвращает все доступные групповые занятия
+      description: Get all fitness classes
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -304,12 +818,35 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Список занятий
+      summary: List all classes
       tags:
       - classes
+  /gyms:
+    get:
+      description: Get all gym locations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Gym'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List all gyms
+      tags:
+      - gyms
   /health:
     get:
-      description: Возвращает статус OK
+      description: Returns service health status
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -317,31 +854,70 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Проверка здоровья сервера
+      summary: Health check
       tags:
       - health
   /me:
     get:
-      description: Возвращает данные авторизованного пользователя
+      description: Returns the currently authenticated user profile
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             $ref: '#/definitions/models.User'
-        "401":
-          description: Unauthorized
+        "500":
+          description: Internal Server Error
           schema:
             additionalProperties:
               type: string
             type: object
       security:
       - Bearer: []
-      summary: Получить текущего пользователя
+      summary: Get current user
       tags:
-      - user
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update name and email of current user
+      parameters:
+      - description: Update data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - Bearer: []
+      summary: Update user profile
+      tags:
+      - users
   /memberships:
     get:
-      description: Возвращает все доступные типы подписок
+      description: Get all available membership plans
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -355,16 +931,16 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Список подписок
+      summary: List all memberships
       tags:
       - memberships
   /memberships/buy:
     post:
       consumes:
       - application/json
-      description: Создаёт платеж и активирует подписку для пользователя
+      description: Purchase a membership plan
       parameters:
-      - description: ID подписки и метод оплаты
+      - description: Purchase data
         in: body
         name: body
         required: true
@@ -386,16 +962,16 @@ paths:
             type: object
       security:
       - Bearer: []
-      summary: Купить подписку
+      summary: Buy membership
       tags:
       - memberships
   /payments:
     post:
       consumes:
       - application/json
-      description: Создаёт запись об оплате произвольной суммы
+      description: Create a standalone payment
       parameters:
-      - description: Сумма и метод оплаты
+      - description: Payment data
         in: body
         name: body
         required: true
@@ -404,11 +980,10 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/models.Payment'
         "400":
           description: Bad Request
           schema:
@@ -417,16 +992,37 @@ paths:
             type: object
       security:
       - Bearer: []
-      summary: Произвольная оплата
+      summary: Create payment
       tags:
       - payments
+  /trainers:
+    get:
+      description: Get all fitness trainers
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Trainer'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List all trainers
+      tags:
+      - trainers
   /users/login:
     post:
       consumes:
       - application/json
-      description: Возвращает JWT токен для авторизации
+      description: Authenticate user and get JWT token
       parameters:
-      - description: Логин и пароль
+      - description: Login credentials
         in: body
         name: body
         required: true
@@ -447,16 +1043,16 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Авторизация
+      summary: Login user
       tags:
       - auth
   /users/register:
     post:
       consumes:
       - application/json
-      description: Создаёт нового пользователя в системе
+      description: Create a new user account
       parameters:
-      - description: Данные пользователя
+      - description: Registration data
         in: body
         name: body
         required: true
@@ -475,12 +1071,12 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Регистрация пользователя
+      summary: Register new user
       tags:
       - auth
 securityDefinitions:
   Bearer:
-    description: 'Введите JWT токен в формате: Bearer <ваш_токен>'
+    description: 'Введите JWT в формате: Bearer <token>'
     in: header
     name: Authorization
     type: apiKey

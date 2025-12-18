@@ -1,8 +1,8 @@
 package repository
 
 import (
+	"Gym_StrongCode/internal/models"
 	"database/sql"
-	"Gym-StrongCode/internal/models"
 )
 
 type TrainerRepository struct {
