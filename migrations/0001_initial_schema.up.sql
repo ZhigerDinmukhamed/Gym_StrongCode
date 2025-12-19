@@ -77,6 +77,8 @@ CREATE TABLE payments (
     currency TEXT DEFAULT 'KZT',
     method TEXT,
     status TEXT DEFAULT 'done',
+    description TEXT,
+    reference_id TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
 );

@@ -28,10 +28,10 @@ import (
 // @description     API для управления фитнес-клубом: пользователи, подписки, залы, тренеры, занятия, бронирования, платежи
 // @host            localhost:8080
 // @BasePath        /api
-// @securityDefinitions.apikey Bearer
+// @securityDefinitions.http Bearer
 // @in header
 // @name Authorization
-// @description Введите JWT в формате: Bearer <token>
+// @description JWT токен для авторизации (префикс Bearer добавляется автоматически)
 func main() {
 	cfg := config.Load()
 	utils.InitLogger()

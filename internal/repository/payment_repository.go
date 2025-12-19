@@ -28,15 +28,15 @@ func (r *PaymentRepository) CreateStandalone(userID, amountCents int, currency, 
 func (r *PaymentRepository) GetByID(id int) (*models.Payment, error) {
 	p := &models.Payment{}
 	err := r.db.QueryRow(`
-		SELECT id, user_id, amount_cents, currency, method, status, created_at
+		SELECT id, user_id, amount_cents, currency, method, status, description, reference_id, created_at
 		FROM payments WHERE id = ?`, id).
-		Scan(&p.ID, &p.UserID, &p.AmountCents, &p.Currency, &p.Method, &p.Status, &p.CreatedAt)
+		Scan(&p.ID, &p.UserID, &p.AmountCents, &p.Currency, &p.Method, &p.Status, &p.Description, &p.ReferenceID, &p.CreatedAt)
 	return p, err
 }
 
 func (r *PaymentRepository) ListAll() ([]models.Payment, error) {
 	rows, err := r.db.Query(`
-		SELECT id, user_id, amount_cents, currency, method, status, created_at
+		SELECT id, user_id, amount_cents, currency, method, status, description, reference_id, created_at
 		FROM payments ORDER BY created_at DESC`)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (r *PaymentRepository) ListAll() ([]models.Payment, error) {
 	var payments []models.Payment
 	for rows.Next() {
 		var p models.Payment
-		if err := rows.Scan(&p.ID, &p.UserID, &p.AmountCents, &p.Currency, &p.Method, &p.Status, &p.CreatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.UserID, &p.AmountCents, &p.Currency, &p.Method, &p.Status, &p.Description, &p.ReferenceID, &p.CreatedAt); err != nil {
 			return nil, err
 		}
 		payments = append(payments, p)
@@ -58,10 +58,17 @@ func (r *PaymentRepository) CreateForMembership(userID, amountCents int, currenc
 }
 
 func (r *PaymentRepository) GetByUser(userID int, status string) ([]models.Payment, error) {
-	rows, err := r.db.Query(`
-		SELECT id, user_id, amount_cents, currency, method, status, created_at
-		FROM payments WHERE user_id = ? AND status = ? ORDER BY created_at DESC`,
-		userID, status)
+	query := `SELECT id, user_id, amount_cents, currency, method, status, description, reference_id, created_at
+		FROM payments WHERE user_id = ?`
+	args := []interface{}{userID}
+
+	if status != "" {
+		query += " AND status = ?"
+		args = append(args, status)
+	}
+	query += " ORDER BY created_at DESC"
+
+	rows, err := r.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +77,7 @@ func (r *PaymentRepository) GetByUser(userID int, status string) ([]models.Payme
 	var payments []models.Payment
 	for rows.Next() {
 		var p models.Payment
-		if err := rows.Scan(&p.ID, &p.UserID, &p.AmountCents, &p.Currency, &p.Method, &p.Status, &p.CreatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.UserID, &p.AmountCents, &p.Currency, &p.Method, &p.Status, &p.Description, &p.ReferenceID, &p.CreatedAt); err != nil {
 			return nil, err
 		}
 		payments = append(payments, p)

@@ -1076,8 +1076,8 @@ paths:
       - auth
 securityDefinitions:
   Bearer:
-    description: 'Введите JWT в формате: Bearer <token>'
-    in: header
-    name: Authorization
-    type: apiKey
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+    description: 'JWT токен для авторизации (префикс Bearer добавляется автоматически)'
 swagger: "2.0"
