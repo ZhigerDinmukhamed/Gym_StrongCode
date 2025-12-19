@@ -5,13 +5,14 @@ if (form) {
     e.preventDefault();
 
     try {
-      const data = await apiFetch('/auth/login', {
+      const data = await apiFetch('/users/login', {
         method: 'POST',
         body: JSON.stringify({
           email: email.value,
           password: password.value
         })
       });
+
 
       localStorage.setItem('token', data.token);
       window.location.href = 'dashboard.html';

@@ -63,7 +63,8 @@ func main() {
 	paymentService := service.NewPaymentService(paymentRepo)
 
 	// Запуск background worker для email
-	go notificationService.StartWorker()
+	notificationService.StartWorker()
+	logger.Info("Email notification worker started")
 
 	// Хендлеры
 	authHandler := handler.NewAuthHandler(authService)
@@ -98,6 +99,9 @@ func main() {
 
 	r.Use(middleware.LoggingMiddleware(logger))
 	r.Use(middleware.RateLimitMiddleware())
+
+	// Статические файлы фронтенда
+	r.Static("/static", "./frontend/static")
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -163,11 +167,19 @@ func main() {
 		}
 	}
 
+	r.NoRoute(func(c *gin.Context) {
+		if len(c.Request.URL.Path) > 4 && c.Request.URL.Path[:4] == "/api" {
+			c.JSON(404, gin.H{"error": "Not found"})
+			return
+		}
+
+		c.File("./frontend/index.html")
+	})
+
 	srv := &http.Server{
 		Addr:    cfg.ServerAddress,
 		Handler: r,
 	}
-
 	go func() {
 		logger.Info("Server starting", zap.String("addr", cfg.ServerAddress))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -175,7 +187,6 @@ func main() {
 		}
 	}()
 
-	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -183,12 +194,13 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
+
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Fatal("Server forced to shutdown", zap.Error(err))
 	}
 
-	// Останавливаем worker
+	logger.Info("Stopping email notification worker...")
 	notificationService.StopWorker()
 
-	logger.Info("Server stopped")
+	logger.Info("Server stopped gracefully")
 }
